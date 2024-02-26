@@ -1,0 +1,14 @@
+FROM prom/prometheus
+LABEL maintainer="prometheus
+
+# Assuming the configuration file is in the 'config' directory relative to the Dockerfile
+COPY config/prometheus.yml /etc/prometheus/prometheus.yml
+
+COPY config/rules/ /etc/prometheus/rules/
+
+
+# Set the entrypoint
+ENTRYPOINT [ "/bin/prometheus" ]
+CMD [ "--web.enable-lifecycle", "--config.file=/etc/prometheus/prometheus.yml" , "--log.level=debug"]
+
+

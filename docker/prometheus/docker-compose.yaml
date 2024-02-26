@@ -1,0 +1,54 @@
+version: "3"
+
+networks:
+  loki:
+
+
+x-logging: &logging
+  logging:
+    driver: loki
+    options:
+      loki-url: "http://{loki_server_url}:3100/loki/api/v1/push"
+
+    
+services:
+  prometheus:
+    build:
+      context: .
+      dockerfile: ./dockerfile/Dockerfile.prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090 # 접근 포트 설정 (컨테이너 외부:컨테이너 내부)
+    restart: always
+    volumes: 
+      - prometheus-data:/prometheus   
+    networks:
+      - loki
+
+  ssl-exporter:
+    build:
+      context: .
+      dockerfile: ./dockerfile/Dockerfile.ssl-exporter
+    container_name: ssl-exporter
+    ports:
+      - 9219:9219
+    networks:
+      - loki
+    restart: always
+
+  alertmanager:
+    build:
+      context: .
+      dockerfile: ./dockerfile/Dockerfile.alertmanager
+    ports:
+      - 9093:9093
+    restart: always
+    volumes:
+      - alertmanager-data:/data
+    networks: 
+      - loki 
+    depends_on:
+      - prometheus      
+volumes:
+ alertmanager-data:
+ prometheus-data:

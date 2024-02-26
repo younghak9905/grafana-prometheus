@@ -1,0 +1,36 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'slack-notifications'
+  repeat_interval: 2m
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - api_url: '{slack_url}' # Slack webhook URL
+    channel: '#prome-grafa-alert' # Slack channel 이름 앞에 '#'을 붙여야 합니다.
+    username: "Prometheus" # 'username' 필드의 오타를 수정했습니다.
+    send_resolved: true
+   
+    text: >-
+     {{ range .Alerts }}
+       *[{{ .Status | toUpper }}]* `{{ .Labels.alertname }}` - `{{ .Labels.severity }}`
+       *Alert:* `{{ .Annotations.summary }}`
+       *Description:* {{ .Annotations.description}}
+     {{ end }}
+
+ 
+ 
+ 
+ 
+ 
+ # text: >-
+  #    {{ range .Alerts }}
+   #     *Alert:* `{{ .Annotations.summary }}` - `{{ .Labels.severity }}`
+    #    *Description:* {{ .Annotations.description }}
+     # {{ end }}
+#    text: "summary: {{ .CommonAnnotations.summary }}\ndescription: {{ .CommonAnnotations.description }}"

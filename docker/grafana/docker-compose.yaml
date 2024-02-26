@@ -1,0 +1,28 @@
+version: "3"
+networks:
+      loki:
+
+volumes:
+   grafana_data: {}
+services:
+  grafana:
+    build:
+     context: .
+     dockerfile: ./dockerfile/Dockerfile.grafana      
+    ports:
+       - 3000:3000
+    networks:
+      - loki
+    user: "472"
+    restart: always    
+  
+  loki:
+    build:
+      context: .
+      dockerfile: ./dockerfile/Dockerfile.loki
+    ports:
+       - 3100:3100
+
+    networks:
+      - loki
+    restart: always

@@ -1,0 +1,18 @@
+# config file version
+apiVersion: 1
+
+datasources:
+- name: Loki-123.203
+  type: loki
+  access: proxy
+  url: http://{loki}:3000
+  jsonData:
+    maxLines: 1000   
+
+- name: prom-123.203
+  type: prometheus
+  access: proxy
+  url: http://{prometheus}:9090
+  jsonData:
+    maxLines: 1000
+

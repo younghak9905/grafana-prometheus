@@ -1,0 +1,95 @@
+groups:
+#healt - check
+- name: blackboxexporter-checks
+  rules:
+  - alert: EndpointDown
+    expr: probe_success{job!='blackbox-exporter-domain'} == 0  #임시로 닫아 놓기 추후 job 부분 지우기
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Endpoint {{ $labels.instance }} down"
+      description: "check it http://{{$labels.instance}}" 
+  
+#container check
+- name: container-down
+  rules:
+  - alert: ContainerDown
+    expr: container_last_seen{container_label_com_docker_compose_config_hash!="", name!="prom-cadvisor-1", name!="prometheus", name!="prometheus-alertmanager-1",name!="docker-frontend-1",name!="docker-backend-1"} <(time() - 40)
+    for: 3m
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{ $labels.name }} is down!!!"
+      description: " check log!! http://{grafana}:3000/d/cb461949-7a3e-4908-8ff3-1c8f4f0b5dd2/docker?orgId=1&refresh=5m&var-containergroup=All&var-interval=$__auto_interval_interval&var-server=&var-Docker={{$labels.name}}"
+
+        
+#ssl - check
+- name: SSLCertificateExpiringSoon 
+  rules:
+  - alert: SSLCertificateExpiring 
+    expr: (floor(probe_ssl_last_chain_expiry_timestamp_seconds - time()) / 86400) < 7
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "SSL Certificate is expiring soon"
+      description: "The SSL certificate for {{ $labels.instance }} expires in less than 7 days."
+- name: container-cpu-overused
+  rules:
+  - alert: Container-cpu-overused!!
+    expr: sum(rate(container_cpu_usage_seconds_total{name=~".+"}[5m])) by (name) * 100 > 90 
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "{{ $labels.name }} overused cpu!!!"
+      description: " check log!! http://{grafana}/d/f498efd7-945c-45a3-b563-72511f6cfd8a/inventory-dashboard?orgId=1"
+
+
+- name: service
+  rules:
+  - record: job:total_app
+    expr: count(probe_http_status_code)
+  - record: job:active_app
+    expr: count(probe_http_status_code == 200)
+  - record: job:deactive_app
+    expr: count(probe_http_status_code) - count(probe_http_status_code == 200)
+  - record: job:total_os
+    expr: count(node_uname_info{job=~"node_exporter"})
+  - record: job:active_os
+    expr: sum(node_uname_info{job=~"node_exporter"} == 1)
+  - record: job:deactive_os
+    expr: count(node_uname_info{job=~"node_exporter"}) - sum(node_uname_info{job=~"node_exporter"} == 1)
+  - record: job:total_containers
+    expr: count(count by (name, instance) (container_last_seen{name=~".+"} offset 15h))
+  - record: job:active_containers
+    expr: count(count by (name, instance) (container_last_seen{name=~".+"} offset 1s))
+  - record: job:deactive_containers
+    expr: count(count by (name, instance) (container_last_seen{name=~".+"} offset 15h)) - count(count by (name, instance) (container_last_seen{name=~".+"} offset 1s))
+  - alert: service - info
+    expr: (hour() == 23) and (minute() < 2)
+    for: 30s
+    labels:
+      severity: info
+    annotations:
+      summary: "오늘의 컨테이너 상황입니다."
+      description: |-
+
+        *Container*
+        --------------------------
+        {{ with query "job:total_containers" }}All:           *{{ . | first | value }}{{ end }}*
+        {{ with query "job:active_containers" }}Active:     *{{ . | first | value }}{{ end }}*
+        {{ with query "job:deactive_containers" }}DeActive: *{{ . | first | value }}{{ end }}*
+        
+        *App*
+        --------------------------
+        {{ with query "job:total_app" }}All:             *{{ . | first | value }}{{ end }}*
+        {{ with query "job:active_app" }}Active:       *{{ . | first | value }}{{ end }}*
+        {{ with query "job:deactive_app" }}DeActive: *{{ . | first | value }}{{ end }}*
+              
+        *OS*
+        ---------------------------
+        {{ with query "job:total_os" }}All:            *{{ . | first | value }}{{ end }}*
+        {{ with query "job:active_os" }}Active:      *{{ . | first | value }}{{ end }}*
+        {{ with query "job:deactive_os" }}DeActive: *{{ . | first | value }}{{ end }}*

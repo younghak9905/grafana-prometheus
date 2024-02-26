@@ -1,0 +1,12 @@
+# Dockerfile-grafana
+FROM grafana/grafana:latest
+
+# Copy provisioning configuration
+COPY provisioning/ /etc/grafana/provisioning/
+# Copy dashboards
+COPY dashboards/ /var/lib/grafana/dashboards/
+
+# 환경 변수 설정
+ENV GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+ENV GF_AUTH_ANONYMOUS_ENABLED=true
+ENV GF_AUTH_ANONYMOUS_ORG_ROLE=Admin

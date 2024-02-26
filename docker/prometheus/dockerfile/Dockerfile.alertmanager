@@ -1,0 +1,9 @@
+FROM prom/alertmanager
+
+# Copy the configuration file
+COPY config/alertmanager.yml /etc/alertmanager/alertmanager.yml
+
+# Set the entrypoint
+ENTRYPOINT [ "/bin/alertmanager" ]
+CMD [ "--config.file=/etc/alertmanager/alertmanager.yml", "--storage.path=/alertmanager"]
+

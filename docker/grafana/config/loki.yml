@@ -1,0 +1,64 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+
+common:
+  instance_addr: loki
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v12
+      index:
+        prefix: index_
+        period: 24h
+
+ruler:
+  alertmanager_url: http://alertmanager:9093
+ 
+   
+limits_config:
+  enforce_metric_name: false
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  ingestion_rate_mb: 10  # 기본값은 4MB/sec, 여기서는 10MB/sec로 높였습니다.
+  ingestion_burst_size_mb: 20  # 기본값은 6MB, 여기서는 20MB로 높였습니다.
+  
+   
+   
+   
+    #limits_config:
+  #enforce_metric_name: false
+  #reject_old_samples: true
+  #reject_old_samples_max_age: 168h
+  #ingestion_rate: 75000
+  #ingestion_burst_size: 100000
+  #
+  #chunk_store_config:
+  #max_look_back_period: 0
+
+  #table_manager:
+  #chunk_tables_provisioning:
+  #  inactive_read_throughput: 0
+  # inactive_write_throughput: 0
+  #  provisioned_read_throughput: 0
+  # provisioned_write_throughput: 0
+  #index_tables_provisioning:
+  # inactive_read_throughput: 0
+  # inactive_write_throughput: 0
+  # provisioned_read_throughput: 0
+  # provisioned_write_throughput: 0
+  #retention_deletes_enabled: false
+  #retention_period: 0
